@@ -1,10 +1,9 @@
 # Codebase Walkthrough
 
-This document explains how `webhooks-playground` is put together: the directory
+This document explains how `examples/webhooks` is put together: the directory
 structure, what each file does, and how a single request actually travels
 through the app from the socket to the response. It describes the code as it
-exists today, not the live-demo build plan in [`spec.md`](./spec.md) (that's a
-separate, from-scratch version of this same idea for a 45-minute talk).
+exists today.
 
 ## What this app is
 
@@ -13,21 +12,21 @@ that does two things:
 
 1. **Sends money** — looks up a bank account, then initiates a bank transfer.
 2. **Receives webhooks** — verifies and handles the asynchronous events Nomba
+
    sends back about those transfers (success, pending, refund, etc).
 
 It runs directly as TypeScript. There is no build step: Node 24's native
-TypeScript support strips the types at run time (see [Why `.ts` imports and
+TypeScript support strips the types at run time (see [Why](#why-ts-imports-and-no-build-step) `.ts` [imports and
 no build step](#why-ts-imports-and-no-build-step) below).
 
 ## Directory structure
 
 ```
-webhooks-playground/
+webhooks/
 ├── .env.example            # template for the env vars the app needs
 ├── package.json
 ├── tsconfig.json
 ├── docs/
-│   ├── spec.md              # live-demo build plan (separate doc)
 │   └── walkthrough.md       # this file
 └── src/
     ├── main.ts               # entry point: boots the HTTP server
@@ -51,9 +50,9 @@ webhooks-playground/
 The pattern repeating under `modules/` is **controller → service**:
 
 - A **controller** only knows about HTTP — it reads `req`, calls a service,
-  and shapes `res`. It never talks to the SDK directly.
-- A **service** only knows about the domain — it calls `nomba.*` and returns
-  plain data or throws. It never touches `req`/`res`.
+and shapes `res`. It never talks to the SDK directly.
+- A **service** only knows about the domain — it calls `nomba.`* and returns
+plain data or throws. It never touches `req`/`res`.
 
 This split is what lets `transfer.service.ts` be reused from the webhook
 dispatch in `transfer.hooks.ts` without dragging Express into it, and it's
@@ -180,8 +179,7 @@ const { BadRequest } = createHttpError;
 `http-errors` is a CommonJS package that builds its named error classes
 (`BadRequest`, `Unauthorized`, …) dynamically at runtime rather than as
 static `module.exports.X = …` assignments. Node's CJS/ESM interop can't see
-those as "named exports" statically, so `import { BadRequest } from
-'http-errors'` fails at runtime with "does not provide an export named
+those as "named exports" statically, so `import { BadRequest } from 'http-errors'` fails at runtime with "does not provide an export named
 `BadRequest`". Importing the default and destructuring at runtime sidesteps
 that.
 
@@ -295,7 +293,7 @@ export const handleWebhook = async (req, res) => {
 }
 ```
 
-The one load-bearing comment here matters: `req.body` is a **raw `Buffer`**,
+The one load-bearing comment here matters: `req.body` is a **raw** `Buffer`,
 not a parsed object, because this route is mounted behind `express.raw()`
 instead of `express.json()` (see `app.setup.ts` below). `verifyWebhook` needs
 the exact raw bytes Nomba signed — a round-tripped `JSON.stringify(JSON.parse(buf))`
@@ -345,30 +343,33 @@ app.use((err, req, res, next) => { ... returnErrorResponse(res, err, req); }); /
 Three things worth noticing about the ordering and structure:
 
 1. **The webhook route gets `express.raw()` scoped to its own path, mounted
+
    before the global `express.json()`.** Body-parsers check whether the body
-   has already been parsed and skip if so, so once `express.raw()` has
-   turned the webhook request's body into a `Buffer`, the later
-   `express.json()` call leaves it alone. Every other route still gets JSON
-   parsing as normal.
+    has already been parsed and skip if so, so once `express.raw()` has
+    turned the webhook request's body into a `Buffer`, the later
+    `express.json()` call leaves it alone. Every other route still gets JSON
+    parsing as normal.
 2. **`routes` is a plain array, not something read back out of Express's
+
    internal router.** Express doesn't expose a clean, stable public API for
-   listing registered routes, and its internal `app._router.stack` structure
-   is undocumented and has changed across major versions. Keeping one array
-   that's both looped over to *register* routes and mapped over to *list*
-   them (`listRoutes`, used by `main.ts`) means the printed list can never
-   drift out of sync with what's actually registered, without relying on
-   Express internals.
-3. **Error-handling middleware is last, and checks `res.headersSent`.** An
+    listing registered routes, and its internal `app._router.stack` structure
+    is undocumented and has changed across major versions. Keeping one array
+    that's both looped over to *register* routes and mapped over to *list*
+    them (`listRoutes`, used by `main.ts`) means the printed list can never
+    drift out of sync with what's actually registered, without relying on
+    Express internals.
+3. **Error-handling middleware is last, and checks** `res.headersSent`**.** An
+
    Express error handler is recognized by its arity (4 params:
-   `(err, req, res, next)`); if a response was already sent before the error
-   middleware runs, calling `res.status(...).json(...)` again would throw.
+    `(err, req, res, next)`); if a response was already sent before the error
+    middleware runs, calling `res.status(...).json(...)` again would throw.
 
 ## Why `.ts` imports and no build step
 
 Two unusual-looking details tie together:
 
 - Every internal relative import ends in `.ts` (e.g. `from './app.setup.ts'`),
-  not the more common `.js`.
+not the more common `.js`.
 - `tsconfig.json` has `"noEmit": true` and `"allowImportingTsExtensions": true`.
 
 This project is never compiled. Node 24 strips TypeScript syntax and runs the
@@ -376,8 +377,7 @@ file directly (`node src/main.ts` just works), but Node's own ESM resolver
 requires the import specifier to match a file that actually exists on disk —
 it does **not** map a `./foo.js` specifier onto an existing `./foo.ts` file
 the way a bundler or `ts-node` would. So imports have to say `.ts`, and
-`allowImportingTsExtensions` is what tells `tsc` (used only for `npm run
-typecheck`, never to emit files) that this is intentional rather than a
+`allowImportingTsExtensions` is what tells `tsc` (used only for `npm run typecheck`, never to emit files) that this is intentional rather than a
 mistake.
 
 `package.json`'s `start`/`dev` scripts reflect this directly:
@@ -409,14 +409,16 @@ Content-Type: application/json
 The request enters the single `http.Server` created by `app.listen()` in
 `main.ts`, and Express runs its middleware stack in registration order:
 
-1. **`cors(...)`** — adds CORS headers. Doesn't touch the body.
-2. **The webhook-only `express.raw()`** — mounted at
+1. `cors(...)` — adds CORS headers. Doesn't touch the body.
+2. **The webhook-only** `express.raw()` — mounted at
+
    `/v1/webhooks/nomba`; this request's path doesn't match, so it's skipped.
-3. **`express.json()`** — path *does* match (everything does, no path
+3. `express.json()` — path *does* match (everything does, no path
+
    filter), content-type is `application/json`, so the body is parsed and
-   `req.body` becomes `{ accountNumber: "1234567890", bankCode: "044" }`.
-4. **`helmet(...)`** — sets security headers.
-5. **`express.urlencoded(...)`** — no-op for a JSON body.
+    `req.body` becomes `{ accountNumber: "1234567890", bankCode: "044" }`.
+4. `helmet(...)` — sets security headers.
+5. `express.urlencoded(...)` — no-op for a JSON body.
 
 ### 2. Router dispatch (`v1Router` in `app.setup.ts`)
 
@@ -446,9 +448,9 @@ const lookupCustomerRequestSchema = z.object({
 pass. `req.body` is reassigned to the parsed (here, unchanged) value, and
 `next()` is called, handing control to the actual route handler.
 
-*(If validation had failed — say a 9-digit account number — `validateRequest`
-would call `returnErrorResponse(res, new BadRequest(...), req)` itself,
-write a `400` with the zod error message, and never call `next()`. The
+*(If validation had failed — say a 9-digit account number —* `validateRequest`
+*would call* `returnErrorResponse(res, new BadRequest(...), req)` *itself,
+write a* `400` *with the zod error message, and never call* `next()`*. The
 handler and the service below would never run.)*
 
 ### 4. Controller (`transfer.controller.ts`)

@@ -16,6 +16,7 @@ others are immediately familiar.
 | --- | --- |
 | [`examples/webhooks`](examples/webhooks) | Bank transfers (lookup → initiate → requery) and verifying/handling the webhooks Nomba sends back about them |
 | [`examples/bills`](examples/bills) | Electricity, cable TV, betting, airtime and data billers (lookup → pay → requery), a cross-biller customer subscription-history lookup, and the same webhook handling applied to bill payments |
+| [`examples/payments`](examples/payments) | Virtual accounts, hosted checkout, direct debit mandates, and saved-card payment methods, plus the same webhook handling applied to payments and checkout |
 
 Each example has its own README with full setup, API reference and
 troubleshooting; `examples/webhooks` additionally has a

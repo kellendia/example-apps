@@ -41,6 +41,10 @@ for (const route of routes) {
 }
 app.use(API_PREFIX, v1Router);
 
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok' });
+});
+
 export const listRoutes = () => routes.map((route) => `${route.method.toUpperCase()} ${API_PREFIX}${route.path}`);
 
 // Fallback route
