@@ -1,4 +1,6 @@
-# example-apps
+![example-apps](assets/banner.svg)
+
+# Example Apps
 
 Small, self-contained Express + TypeScript servers demonstrating the
 [`@nomba/node-sdk`](https://developer.nomba.com). Each example under

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320" role="img" aria-label="example-apps. A collection of Node.js and TypeScript example apps for the Nomba SDK. Run: cd examples/webhooks and npm run dev">
+  <title>Example Apps. A collection of Node.js and TypeScript example apps for the Nomba SDK. Run: cd examples/webhooks and npm run dev</title>
+  <defs>
+    <pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse">
+      <rect x="7.5" y="7.5" width="1.2" height="1.2" fill="#1A1A1A" fill-opacity="0.16"/>
+    </pattern>
+    <linearGradient id="panelFade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#000000" stop-opacity="1"/>
+      <stop offset="0.22" stop-color="#FFFFFF" stop-opacity="1"/>
+    </linearGradient>
+    <mask id="panelMask">
+      <rect x="820" y="0" width="460" height="320" fill="url(#panelFade)"/>
+    </mask>
+  </defs>
+
+  <!-- base -->
+  <rect width="1280" height="320" fill="#FFCC00"/>
+
+  <!-- faint oversized watermark glyph, like the reference banner's background mark -->
+  <g opacity="0.08" fill="#1A1A1A">
+    <circle cx="1480" cy="160" r="430"/>
+  </g>
+
+  <rect width="1280" height="320" fill="url(#dots)"/>
+
+  <!-- right-hand panel, faded into the yellow background on its left edge -->
+  <g mask="url(#panelMask)">
+    <rect x="820" y="0" width="460" height="320" fill="#1A1A1A"/>
+  </g>
+  <g transform="translate(962,44)" font-family="SFMono-Regular, Consolas, Menlo, monospace" font-size="14">
+    <text x="0" y="0" fill="#6B6B66">examples/</text>
+    <text x="0" y="30"><tspan fill="#6B6B66">├── </tspan><tspan fill="#9FC4FF">webhooks</tspan></text>
+    <text x="0" y="54" fill="#6B6B66">│</text>
+    <text x="50" y="54" fill="#6B6B66">transfers + verifyWebhook</text>
+    <text x="0" y="92"><tspan fill="#6B6B66">└── </tspan><tspan fill="#9FC4FF">bills</tspan></text>
+    <text x="50" y="116" fill="#6B6B66">electricity, cable, betting,</text>
+    <text x="50" y="140" fill="#6B6B66">airtime, data + verifyWebhook</text>
+    <text x="0" y="178" fill="#F2B400">// same structure, every time:</text>
+    <text x="0" y="202" fill="#E8E6DF">controller → service → nomba.*</text>
+  </g>
+
+  <!-- stacked-apps glyph: one app shape behind another -->
+  <g transform="translate(60,46)">
+    <rect x="-20" y="-6" width="34" height="26" rx="5" fill="none" stroke="#1A1A1A" stroke-width="3" opacity="0.5"/>
+    <rect x="-8" y="-18" width="34" height="26" rx="5" fill="#FFCC00" stroke="#1A1A1A" stroke-width="3"/>
+  </g>
+
+  <!-- wordmark -->
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="56" y="148" font-size="56" font-weight="700" fill="#1A1A1A">example<tspan fill="#1A1A1A" fill-opacity="0.45">-</tspan>apps</text>
+    <text x="57" y="186" font-size="19" fill="#1A1A1A" fill-opacity="0.72">A collection of Node.js + TypeScript examples</text>
+    <text x="57" y="212" font-size="19" fill="#1A1A1A" fill-opacity="0.72">for the Nomba SDK, built from one shared structure.</text>
+  </g>
+
+  <!-- run command pill -->
+  <rect x="56.5" y="244.5" width="360" height="47" rx="10" fill="#1A1A1A" stroke="#1A1A1A"/>
+  <text x="76" y="273" font-family="SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#A0A09C">$</text>
+  <text x="94" y="273" font-family="SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#F0F0ED">cd examples/webhooks &amp;&amp; npm run dev</text>
+</svg>
