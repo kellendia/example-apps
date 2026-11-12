@@ -53,7 +53,7 @@
   </g>
 
   <!-- run command pill -->
-  <rect x="56.5" y="244.5" width="360" height="47" rx="10" fill="#1A1A1A" stroke="#1A1A1A"/>
+  <rect x="56.5" y="244.5" width="370" height="47" rx="10" fill="#1A1A1A" stroke="#1A1A1A"/>
   <text x="76" y="273" font-family="SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#A0A09C">$</text>
   <text x="94" y="273" font-family="SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#F0F0ED">cd examples/webhooks &amp;&amp; npm run dev</text>
 </svg>
