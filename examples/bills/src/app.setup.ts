@@ -28,10 +28,32 @@ app.use(express.urlencoded({ extended: true }));
 // Routes go here. Kept as a plain list (not introspected from the router) so we can both
 // register them and log them at boot from the same source of truth.
 const routes: { method: 'get' | 'post'; path: string; handler: RequestHandler | RequestHandler[] }[] = [
+    // electricity
     { method: 'get', path: '/bills/electricity/providers', handler: billController.listElectricityProviders },
     { method: 'post', path: '/bills/electricity/lookup-meter', handler: billController.lookupMeter },
     { method: 'post', path: '/bills/electricity', handler: billController.payElectricityBill },
     { method: 'get', path: '/bills/electricity/:billId', handler: billController.getBillDetails },
+
+    // cable TV
+    { method: 'get', path: '/bills/cable/plans', handler: billController.listCablePlans },
+    { method: 'post', path: '/bills/cable/lookup-customer', handler: billController.lookupCableCustomer },
+    { method: 'post', path: '/bills/cable', handler: billController.payCableBill },
+
+    // betting
+    { method: 'get', path: '/bills/betting/providers', handler: billController.listBettingProviders },
+    { method: 'post', path: '/bills/betting/lookup-customer', handler: billController.lookupBettingCustomer },
+    { method: 'post', path: '/bills/betting', handler: billController.payBettingBill },
+
+    // airtime
+    { method: 'post', path: '/bills/airtime', handler: billController.buyAirtime },
+
+    // data
+    { method: 'get', path: '/bills/data/plans/:network', handler: billController.listDataPlans },
+    { method: 'post', path: '/bills/data', handler: billController.buyData },
+
+    // shared across billers
+    { method: 'get', path: '/bills/customers/:customerId/subscriptions', handler: billController.getCustomerSubscriptionHistory },
+
     { method: 'post', path: WEBHOOK_PATH, handler: webhookController.handleWebhook },
 ];
 

@@ -3,9 +3,10 @@
 # examples/bills
 
 A small Express + TypeScript server for exercising the [`@nomba/node-sdk`](https://developer.nomba.com):
-it looks up and pays electricity bills, and receives, verifies, and handles the
-asynchronous webhooks Nomba sends back about those payments (success, pending,
-failed, etc).
+it looks up and pays electricity, cable TV, betting, airtime and data bills,
+looks up a customer's previous bill payments, and receives, verifies, and
+handles the asynchronous webhooks Nomba sends back about those payments
+(success, pending, failed, etc).
 
 This is the same app structure as [`examples/webhooks`](../webhooks) — same
 layers (controller → service), same env validation, same logger, same
@@ -69,6 +70,16 @@ On boot the server prints every registered route:
 [ExampleServer] 12345  - 11/12/2026, 12:00:00 PM     LOG [Bootstrap]   POST /v1/bills/electricity/lookup-meter
 [ExampleServer] 12345  - 11/12/2026, 12:00:00 PM     LOG [Bootstrap]   POST /v1/bills/electricity
 [ExampleServer] 12345  - 11/12/2026, 12:00:00 PM     LOG [Bootstrap]   GET /v1/bills/electricity/:billId
+[ExampleServer] 12345  - 11/12/2026, 12:00:00 PM     LOG [Bootstrap]   GET /v1/bills/cable/plans
+[ExampleServer] 12345  - 11/12/2026, 12:00:00 PM     LOG [Bootstrap]   POST /v1/bills/cable/lookup-customer
+[ExampleServer] 12345  - 11/12/2026, 12:00:00 PM     LOG [Bootstrap]   POST /v1/bills/cable
+[ExampleServer] 12345  - 11/12/2026, 12:00:00 PM     LOG [Bootstrap]   GET /v1/bills/betting/providers
+[ExampleServer] 12345  - 11/12/2026, 12:00:00 PM     LOG [Bootstrap]   POST /v1/bills/betting/lookup-customer
+[ExampleServer] 12345  - 11/12/2026, 12:00:00 PM     LOG [Bootstrap]   POST /v1/bills/betting
+[ExampleServer] 12345  - 11/12/2026, 12:00:00 PM     LOG [Bootstrap]   POST /v1/bills/airtime
+[ExampleServer] 12345  - 11/12/2026, 12:00:00 PM     LOG [Bootstrap]   GET /v1/bills/data/plans/:network
+[ExampleServer] 12345  - 11/12/2026, 12:00:00 PM     LOG [Bootstrap]   POST /v1/bills/data
+[ExampleServer] 12345  - 11/12/2026, 12:00:00 PM     LOG [Bootstrap]   GET /v1/bills/customers/:customerId/subscriptions
 [ExampleServer] 12345  - 11/12/2026, 12:00:00 PM     LOG [Bootstrap]   POST /v1/webhooks/nomba
 ```
 
@@ -91,10 +102,15 @@ Note the default `PORT` (`43903`) differs from `examples/webhooks`'s
 
 ## API reference
 
-All routes are mounted under the `/v1` prefix. This example covers
-**electricity** specifically — the SDK has the same lookup-then-pay shape for
-cable, betting, airtime and data billers (`nomba.cable`, `nomba.betting`,
-`nomba.airtime`, `nomba.data`), which would plug into this same structure.
+All routes are mounted under the `/v1` prefix. Five billers are covered —
+electricity, cable TV, betting, airtime and data — plus one endpoint that
+looks across all of them for a given customer.
+
+Electricity, cable and betting share the same shape: **list providers →
+look up the customer (validate before paying) → pay**. Airtime has no lookup
+step — there's nothing to validate ahead of a plain phone-number top-up.
+Data looks up *plans* (by network) rather than a customer, since a data
+purchase targets a plan (`productId`), not an amount.
 
 ### `GET /v1/bills/electricity/providers`
 
@@ -160,6 +176,150 @@ endpoint either, since the SDK has none to back it).
 ```bash
 curl http://localhost:43903/v1/bills/electricity/bill-001
 ```
+
+### `GET /v1/bills/cable/plans`
+
+Lists a cable TV provider's subscription plans (bouquets) and prices.
+
+```bash
+curl "http://localhost:43903/v1/bills/cable/plans?cableTvType=dstv"
+```
+
+| Query param | Type | Rule |
+| --- | --- | --- |
+| `cableTvType` | string | required — e.g. `dstv`, `gotv`, `startimes`, `ShowMax` |
+
+### `POST /v1/bills/cable/lookup-customer`
+
+Resolves a smartcard number to the customer's account name.
+
+```bash
+curl -X POST http://localhost:43903/v1/bills/cable/lookup-customer \
+  -H "Content-Type: application/json" \
+  -d '{"cableTvType": "dstv", "customerId": "1234567890"}'
+```
+
+### `POST /v1/bills/cable`
+
+Pays a cable TV subscription.
+
+```bash
+curl -X POST http://localhost:43903/v1/bills/cable \
+  -H "Content-Type: application/json" \
+  -d '{
+    "cableTvType": "dstv",
+    "customerId": "1234567890",
+    "amount": 10500,
+    "payerName": "Jane Doe",
+    "merchantTxRef": "cable-001"
+  }'
+```
+
+### `GET /v1/bills/betting/providers`
+
+Lists the supported betting providers.
+
+```bash
+curl http://localhost:43903/v1/bills/betting/providers
+```
+
+### `POST /v1/bills/betting/lookup-customer`
+
+Resolves a betting account/customer ID to the account name.
+
+```bash
+curl -X POST http://localhost:43903/v1/bills/betting/lookup-customer \
+  -H "Content-Type: application/json" \
+  -d '{"bettingProvider": "bet9ja", "customerId": "1234567"}'
+```
+
+### `POST /v1/bills/betting`
+
+Funds a betting wallet.
+
+```bash
+curl -X POST http://localhost:43903/v1/bills/betting \
+  -H "Content-Type: application/json" \
+  -d '{
+    "bettingProvider": "bet9ja",
+    "customerId": "1234567",
+    "phoneNumber": "08012345678",
+    "amount": 2000,
+    "payerName": "Jane Doe",
+    "merchantTxRef": "bet-001"
+  }'
+```
+
+### `POST /v1/bills/airtime`
+
+Tops up a phone number directly — no lookup step.
+
+```bash
+curl -X POST http://localhost:43903/v1/bills/airtime \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phoneNumber": "08012345678",
+    "network": "MTN",
+    "amount": 500,
+    "merchantTxRef": "airtime-001"
+  }'
+```
+
+| Field | Type | Rule |
+| --- | --- | --- |
+| `phoneNumber` | string | 11–13 characters |
+| `network` | string | `MTN`, `GLO`, `AIRTEL`, or `9MOBILE` (case-insensitive) |
+| `amount` | number | positive |
+| `merchantTxRef` | string | required — idempotency key |
+| `senderName` | string | optional |
+
+### `GET /v1/bills/data/plans/:network`
+
+Lists the data bundles available for a network.
+
+```bash
+curl http://localhost:43903/v1/bills/data/plans/mtn
+```
+
+### `POST /v1/bills/data`
+
+Buys a data bundle. Unlike the other billers, this takes a `productId` from
+the plans list rather than a free-form `amount` — buying by amount directly
+is deprecated on Nomba's side.
+
+```bash
+curl -X POST http://localhost:43903/v1/bills/data \
+  -H "Content-Type: application/json" \
+  -d '{
+    "productId": "mtn1",
+    "phoneNumber": "08012345678",
+    "network": "MTN",
+    "merchantTxRef": "data-001"
+  }'
+```
+
+### `GET /v1/bills/customers/:customerId/subscriptions`
+
+Looks up a customer's previous bill payments — the meter number, smartcard
+number, betting account or phone number a payment went to
+(`customerBillerId` on the transaction) — across electricity, cable, betting,
+airtime and data alike.
+
+```bash
+curl http://localhost:43903/v1/bills/customers/1234567890/subscriptions
+```
+
+**There's no dedicated "customer history" endpoint on the SDK for this.**
+[`bill.service.ts`](src/modules/bills/bill.service.ts)'s
+`getCustomerSubscriptionHistory` demonstrates the only way to get it today:
+walk the parent account's transactions (`nomba.transactions.iterateParentTransactions()`)
+and match on `customerBillerId` client-side, capped at a fixed number of
+scanned transactions (`SCAN_LIMIT`) so one lookup can't run away paging
+through an account's entire history. That cap is a real ceiling, not a
+nicety — a customer whose most recent matching bill is older than the scan
+window won't be found. For anything beyond a demo, keep your own index of
+payments by customer (e.g. in a database written to from the webhook
+handler) rather than scanning Nomba's transaction list on every lookup.
 
 ### `POST /v1/webhooks/nomba`
 
@@ -248,7 +408,7 @@ src/
 │   ├── logger.ts                 # Nest-style console logger
 │   ├── interceptor.response.ts   # shared success/error JSON envelopes
 │   ├── validator.request.ts      # zod-validation middleware factory
-│   └── bill.hooks.ts             # success/pending/failed handlers for payElectricity()
+│   └── bill.hooks.ts             # success/pending/failed handlers, shared by every biller
 └── modules/                      # one folder per domain
     ├── nomba.ts                  # the shared, configured SDK client
     ├── bills/
