@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320" role="img" aria-label="examples/webhooks. A Node.js and TypeScript example for initiating Nomba transfers and verifying Nomba webhooks. Run: npm run dev">
+  <title>examples/webhooks. A Node.js and TypeScript example for initiating Nomba transfers and verifying Nomba webhooks. Run: npm run dev</title>
+  <defs>
+    <pattern id="dots" width="16" height="16" patternUnits="userSpaceOnUse">
+      <rect x="7.5" y="7.5" width="1.2" height="1.2" fill="#1A1A1A" fill-opacity="0.16"/>
+    </pattern>
+    <linearGradient id="panelFade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#000000" stop-opacity="1"/>
+      <stop offset="0.22" stop-color="#FFFFFF" stop-opacity="1"/>
+    </linearGradient>
+    <mask id="panelMask">
+      <rect x="820" y="0" width="460" height="320" fill="url(#panelFade)"/>
+    </mask>
+  </defs>
+
+  <!-- base -->
+  <rect width="1280" height="320" fill="#FFCC00"/>
+
+  <!-- faint oversized watermark glyph, like the reference banner's background mark -->
+  <g opacity="0.08" fill="#1A1A1A">
+    <circle cx="1480" cy="160" r="430"/>
+  </g>
+
+  <rect width="1280" height="320" fill="url(#dots)"/>
+
+  <!-- right-hand code panel, faded into the yellow background on its left edge -->
+  <g mask="url(#panelMask)">
+    <rect x="820" y="0" width="460" height="320" fill="#1A1A1A"/>
+  </g>
+  <g transform="translate(962,42)" font-family="SFMono-Regular, Consolas, Menlo, monospace" font-size="14">
+    <text y="0"><tspan fill="#F2B400">import</tspan><tspan fill="#E8E6DF"> { verifyWebhook }</tspan></text>
+    <text y="24" fill="#E8E6DF">  from <tspan fill="#9FE6B0">"@nomba/node-sdk"</tspan>;</text>
+    <text y="62" fill="#6B6B66">// POST /v1/webhooks/nomba</text>
+    <text y="92"><tspan fill="#F2B400">const</tspan><tspan fill="#E8E6DF"> ok = </tspan><tspan fill="#9FC4FF">verifyWebhook</tspan><tspan fill="#E8E6DF">(</tspan></text>
+    <text y="116" fill="#E8E6DF">  rawBody, signature,</text>
+    <text y="140" fill="#E8E6DF">  timestamp, secret</text>
+    <text y="164" fill="#E8E6DF">);</text>
+    <text y="198"><tspan fill="#6B6B66">if (!ok) </tspan><tspan fill="#F28B82">throw</tspan><tspan fill="#E8E6DF"> Unauthorized();</tspan></text>
+    <text y="232" fill="#6B6B66">// verified → dispatch</text>
+    <text y="256"><tspan fill="#9FC4FF">handleWebhookEvent</tspan><tspan fill="#E8E6DF">(event);</tspan></text>
+  </g>
+
+  <!-- sync / webhook glyph: two nodes, a request arrow out and a signed event back -->
+  <g transform="translate(60,46)">
+    <circle cx="0" cy="0" r="17" fill="none" stroke="#1A1A1A" stroke-width="3"/>
+    <rect x="-6" y="-6" width="12" height="12" rx="2" fill="#1A1A1A"/>
+    <circle cx="92" cy="0" r="17" fill="none" stroke="#1A1A1A" stroke-width="3"/>
+    <path d="M30 -16 L0 -56" stroke="#1A1A1A" stroke-width="3" fill="none" opacity="0"/>
+    <path d="M21 -8 C45 -30 70 -30 84 -12" stroke="#1A1A1A" stroke-width="3" fill="none" marker-end="url(#arrowFwd)"/>
+    <path d="M84 12 C70 34 45 34 21 12" stroke="#1A1A1A" stroke-width="3" fill="none" stroke-dasharray="2 5" marker-end="url(#arrowBack)"/>
+  </g>
+  <defs>
+    <marker id="arrowFwd" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 Z" fill="#1A1A1A"/>
+    </marker>
+    <marker id="arrowBack" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <path d="M0 0 L8 4 L0 8 Z" fill="#1A1A1A"/>
+    </marker>
+  </defs>
+
+  <!-- wordmark -->
+  <g font-family="Arial, Helvetica, sans-serif">
+    <text x="56" y="148" font-size="56" font-weight="700" fill="#1A1A1A">examples<tspan fill="#1A1A1A" fill-opacity="0.45">/</tspan>webhooks</text>
+    <text x="57" y="186" font-size="19" fill="#1A1A1A" fill-opacity="0.72">Node.js + TypeScript example for the Nomba SDK:</text>
+    <text x="57" y="212" font-size="19" fill="#1A1A1A" fill-opacity="0.72">send transfers, verify and handle webhooks.</text>
+  </g>
+
+  <!-- run command pill -->
+  <rect x="56.5" y="244.5" width="300" height="47" rx="10" fill="#1A1A1A" stroke="#1A1A1A"/>
+  <text x="76" y="273" font-family="SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#A0A09C">$</text>
+  <text x="94" y="273" font-family="SFMono-Regular, Consolas, Menlo, monospace" font-size="16" fill="#F0F0ED">npm run dev</text>
+</svg>
