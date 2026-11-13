@@ -1,3 +1,4 @@
+import { eq, sql } from "drizzle-orm";
 import nomba from "../nomba.ts";
 import {
     type ElectricityPaymentParams,
@@ -8,6 +9,8 @@ import {
     type Transaction,
 } from "@nomba/node-sdk";
 import { onSuccessHook, onPendingHook, onFailedHook } from "../../common/bill.hooks.ts";
+import { db } from "../../database/client.ts";
+import { billPayments } from "../../database/schema.ts";
 
 // -- electricity --
 
@@ -21,9 +24,9 @@ export const lookupMeter = async (disco: string, customerId: string) => {
 
 export const payElectricityBill = async (paymentData: ElectricityPaymentParams) => {
     return nomba.electricity.payElectricity(paymentData, {
-        onSuccess: onSuccessHook,
-        onPending: onPendingHook,
-        onFailed: onFailedHook,
+        onSuccess: onSuccessHook('electricity', paymentData),
+        onPending: onPendingHook('electricity', paymentData),
+        onFailed: onFailedHook('electricity', paymentData),
     });
 }
 
@@ -39,9 +42,9 @@ export const lookupCableCustomer = async (cableTvType: string, customerId: strin
 
 export const payCableBill = async (paymentData: CableTvSubscriptionParams) => {
     return nomba.cable.subscribeCableTv(paymentData, {
-        onSuccess: onSuccessHook,
-        onPending: onPendingHook,
-        onFailed: onFailedHook,
+        onSuccess: onSuccessHook('cable', paymentData),
+        onPending: onPendingHook('cable', paymentData),
+        onFailed: onFailedHook('cable', paymentData),
     });
 }
 
@@ -57,9 +60,9 @@ export const lookupBettingCustomer = async (bettingProvider: string, customerId:
 
 export const payBettingBill = async (paymentData: BettingPaymentParams) => {
     return nomba.betting.payBetting(paymentData, {
-        onSuccess: onSuccessHook,
-        onPending: onPendingHook,
-        onFailed: onFailedHook,
+        onSuccess: onSuccessHook('betting', paymentData),
+        onPending: onPendingHook('betting', paymentData),
+        onFailed: onFailedHook('betting', paymentData),
     });
 }
 
@@ -69,9 +72,9 @@ export const payBettingBill = async (paymentData: BettingPaymentParams) => {
 
 export const buyAirtime = async (purchaseData: AirtimePurchaseParams) => {
     return nomba.airtime.buyAirtime(purchaseData, {
-        onSuccess: onSuccessHook,
-        onPending: onPendingHook,
-        onFailed: onFailedHook,
+        onSuccess: onSuccessHook('airtime', purchaseData),
+        onPending: onPendingHook('airtime', purchaseData),
+        onFailed: onFailedHook('airtime', purchaseData),
     });
 }
 
@@ -83,9 +86,9 @@ export const listDataPlans = async (network: string) => {
 
 export const buyData = async (purchaseData: DataPurchaseParams) => {
     return nomba.data.buyData(purchaseData, {
-        onSuccess: onSuccessHook,
-        onPending: onPendingHook,
-        onFailed: onFailedHook,
+        onSuccess: onSuccessHook('data', purchaseData),
+        onPending: onPendingHook('data', purchaseData),
+        onFailed: onFailedHook('data', purchaseData),
     });
 }
 
@@ -94,7 +97,15 @@ export const buyData = async (purchaseData: DataPurchaseParams) => {
 // through the requery service, keyed on the merchantTxRef the caller chose.
 
 export const getBillDetails = async (billId: string) => {
-    return nomba.requery.fetchParentTransaction({ merchantTxRef: billId });
+    const result = await nomba.requery.fetchParentTransaction({ merchantTxRef: billId });
+
+    // Refresh our local copy with whatever Nomba says now, if we have a row for it.
+    await db
+        .update(billPayments)
+        .set({ responsePayload: JSON.stringify(result), updatedAt: sql`(current_timestamp)` })
+        .where(eq(billPayments.reference, billId));
+
+    return result;
 }
 
 // -- customer subscription history --

@@ -8,6 +8,7 @@ const envSchema = z.object({
   NOMBA_CLIENT_SECRET: z.string(),
   NOMBA_ENVIRONMENT: z.enum(['sandbox', 'production']).default('sandbox'),
   NOMBA_WEBHOOK_SECRET: z.string(),
+  DATABASE_PATH: z.string().default('./payments.db'),
 });
 
 config();
@@ -19,4 +20,5 @@ export const {
     NOMBA_CLIENT_SECRET,
     NOMBA_ENVIRONMENT,
     NOMBA_WEBHOOK_SECRET,
+    DATABASE_PATH,
 } = envSchema.parse(process.env);

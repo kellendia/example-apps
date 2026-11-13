@@ -5,10 +5,11 @@
 Small, self-contained Express + TypeScript servers demonstrating the
 [`@nomba/node-sdk`](https://developer.nomba.com). Each example under
 `examples/` is its own standalone app — own `package.json`, own
-dependencies, own `.env` — built from the same structure (controller →
-service layers, validated env config, a shared NestJS-style logger,
-`verifyWebhook`-based webhook handling) so that once you've read one, the
-others are immediately familiar.
+dependencies, own `.env`, own local SQLite database — built from the same
+structure (controller → service layers, validated env config, a shared
+NestJS-style logger, `verifyWebhook`-based webhook handling,
+[drizzle-orm](https://orm.drizzle.team) + `node:sqlite` persistence) so that
+once you've read one, the others are immediately familiar.
 
 ## Examples
 
@@ -46,3 +47,10 @@ hooks) → `modules/<domain>/` (controller + service) and `modules/webhooks/`
 if the new example also needs webhook handling. The domain-agnostic files
 under `common/` and `modules/nomba.ts` can be copied verbatim; only the
 domain module and the route table in `app.setup.ts` actually change.
+
+`src/database/client.ts` (opens the db, runs migrations on import) and
+`drizzle.config.ts` can also be copied verbatim — only `src/database/schema.ts`
+is domain-specific, since its tables mirror the new example's own resources.
+After writing it, run `npm install` then `npm run db:generate` once to
+produce the initial migration in `src/database/migrations/`, and check it
+into the repo.

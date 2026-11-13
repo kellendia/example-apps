@@ -1,6 +1,7 @@
 // This file contains the interceptor response for the application
 
 import { type Response, type Request as ExpressRequest } from 'express';
+import { STATUS_CODES } from 'node:http';
 
 export const returnSuccessResponse = (res: Response, data: any, statusCode: number = 200) => {
     res.status(statusCode).json({
@@ -11,18 +12,15 @@ export const returnSuccessResponse = (res: Response, data: any, statusCode: numb
     });
 };
 
-type HttpLikeError = Error & { statusCode?: number; status?: number };
+// Same envelope NestJS's class-validator/HttpException filter produces:
+// { statusCode, message, error }, with `message` an array for validation failures.
+type HttpLikeError = Error & { statusCode?: number; status?: number; messages?: string[] };
 
 export const returnErrorResponse = (res: Response, error: HttpLikeError, req: ExpressRequest) => {
     const statusCode = error.statusCode ?? error.status ?? 500;
     res.status(statusCode).json({
-        message: 'Something went wrong',
-        timestamp: new Date().toISOString(),
-        path: req.url,
-        method: req.method,
-        error: {
-            message: error.message,
-            stack: error.stack,
-        },
+        statusCode,
+        message: error.messages ?? error.message,
+        error: STATUS_CODES[statusCode] ?? 'Internal Server Error',
     });
 };

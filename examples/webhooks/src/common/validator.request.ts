@@ -12,7 +12,11 @@ export const validateRequest = (schema: z.ZodType<any, any, any>,) => {
             next();
         } catch (error) {
             if (error instanceof z.ZodError) {
-                returnErrorResponse(res, new BadRequest(error.message), req);
+                // class-validator style: one message per failed field, e.g. "amount Required".
+                const messages = error.issues.map((issue) => `${issue.path.join('.') || 'body'} ${issue.message}`);
+                const badRequest = new BadRequest(messages.join(', ')) as InstanceType<typeof BadRequest> & { messages: string[] };
+                badRequest.messages = messages;
+                returnErrorResponse(res, badRequest, req);
                 return;
             }
             returnErrorResponse(res, new BadRequest('Invalid request'), req);

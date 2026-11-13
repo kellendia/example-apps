@@ -2,6 +2,7 @@ import express, { type Application, type Request as ExpressRequest, type Respons
 import cors from 'cors';
 import helmet from 'helmet';
 import { returnErrorResponse } from './common/interceptor.response.ts';
+import { requestLogger } from './common/request.logger.ts';
 import { Logger } from './common/logger.ts';
 import * as transferController from './modules/transfer/transfer.controller.ts';
 import * as webhookController from './modules/webhooks/webhook.controller.ts';
@@ -17,6 +18,7 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 }));
+app.use(requestLogger);
 // Must run before express.json(): verifyWebhook needs the raw bytes, not a parsed object.
 app.use(`${API_PREFIX}${WEBHOOK_PATH}`, express.raw({ type: 'application/json' }));
 app.use(express.json());
@@ -33,6 +35,7 @@ const routes: { method: 'get' | 'post'; path: string; handler: RequestHandler | 
     { method: 'post', path: '/transfers', handler: transferController.initiateTransfer },
     { method: 'get', path: '/transfers/:transferId', handler: transferController.getTransferDetails },
     { method: 'post', path: WEBHOOK_PATH, handler: webhookController.handleWebhook },
+    { method: 'post', path: '/webhooks/repush', handler: webhookController.repushWebhook },
 ];
 
 const v1Router = express.Router();
@@ -50,7 +53,9 @@ export const listRoutes = () => routes.map((route) => `${route.method.toUpperCas
 // Fallback route
 app.use((req, res) => {
     res.status(404).json({
-        message: 'Route not found',
+        statusCode: 404,
+        message: `Cannot ${req.method} ${req.url}`,
+        error: 'Not Found',
     });
 });
 
